@@ -5,6 +5,7 @@ import tailwindcss from '@tailwindcss/vite'
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react(), tailwindcss()],
+  base: './', // Enable relative paths for GitHub Pages hosting
   server: {
     port: 3000,
     proxy: {
