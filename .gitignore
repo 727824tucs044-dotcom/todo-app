@@ -1,0 +1,21 @@
+# Node & Vite dependencies
+node_modules/
+dist/
+dist-ssr/
+*.local
+
+# Java / Maven build output
+backend/target/
+*.class
+*.jar
+*.war
+
+# IDE files
+.idea/
+.vscode/
+*.swp
+*.ds_store
+
+# Capacitor build files
+frontend/android/
+frontend/ios/
