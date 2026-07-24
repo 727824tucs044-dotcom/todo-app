@@ -1,43 +1,28 @@
+@echo off
 @REM ----------------------------------------------------------------------------
-@REM Maven Start Up Batch script
+@REM Maven Start Up Batch script for Windows
 @REM ----------------------------------------------------------------------------
 
-@if "%DEBUG%" == "" @echo off
-@classworlds.conf.path%
-
-@setlocal
+setlocal
 
 set ERROR_CODE=0
 
+@REM Find java executable
+set JAVA_EXE=java
+if not "%JAVA_HOME%" == "" (
+    set "JAVA_EXE=%JAVA_HOME%\bin\java.exe"
+)
+
 @REM Find the project base dir
-set MAVEN_PROJECTBASEDIR=%~dp0
-:findBaseDir
-if exist "%MAVEN_PROJECTBASEDIR%\.mvn" goto baseDirFound
-set MAVEN_PROJECTBASEDIR=%MAVEN_PROJECTBASEDIR%..
-goto findBaseDir
-:baseDirFound
+set "MAVEN_PROJECTBASEDIR=%~dp0"
 
-set MAVEN_CONFIG=%MAVEN_PROJECTBASEDIR%\.mvn
+if exist "%MAVEN_PROJECTBASEDIR%\.mvn\wrapper\maven-wrapper.jar" (
+    "%JAVA_EXE%" -jar "%MAVEN_PROJECTBASEDIR%\.mvn\wrapper\maven-wrapper.jar" %*
+) else (
+    "%JAVA_EXE%" -cp "%MAVEN_PROJECTBASEDIR%\target\classes" com.todoapp.TodoApplication
+)
 
-@REM Find JAVA_HOME
-if not "%JAVA_HOME%" == "" goto OkJHome
-
-echo.
-echo ERROR: JAVA_HOME is not set and no 'java' command could be found in your PATH.
-echo.
-goto error
-
-:OkJHome
-
-set WRAPPER_JAR="%MAVEN_PROJECTBASEDIR%\.mvn\wrapper\maven-wrapper.jar"
-set WRAPPER_LAUNCHER=org.apache.maven.wrapper.MavenWrapperMain
-
-%JAVA_HOME%\bin\java.exe -jar %WRAPPER_JAR% %*
-if ERRORLEVEL 1 goto error
-goto end
-
-:error
-set ERROR_CODE=1
+if ERRORLEVEL 1 set ERROR_CODE=1
 
 :end
 @endlocal & set ERROR_CODE=%ERROR_CODE%
