@@ -61,3 +61,53 @@
 ::-webkit-scrollbar-thumb:hover {
   background: #475569;
 }
+
+/* ==========================================================
+   Animation keyframes
+   Used across Navbar, TaskModal, AuthModal, ConfirmModal,
+   CalendarView, RemindersView, ProfileView, AdminView, App
+   ========================================================== */
+
+/* Generic fade + slight rise — mobile menus, tab switches, messages */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Modal backdrop fade-in */
+@keyframes overlayIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Modal panel scale + rise-in (TaskModal, AuthModal, ConfirmModal) */
+@keyframes modalIn {
+  from { opacity: 0; transform: scale(0.96) translateY(8px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+/* Error banners — small shake/settle to draw attention */
+@keyframes shakeIn {
+  0% { opacity: 0; transform: translateX(-4px); }
+  50% { transform: translateX(3px); }
+  100% { opacity: 1; transform: translateX(0); }
+}
+
+/* Calendar grid fade when switching months */
+@keyframes monthFade {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Toast-style alerts sliding down from the top (RemindersView) */
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Top loading bar while tasks are fetching (App.jsx) */
+@keyframes loadingBar {
+  0% { transform: translateX(-100%); }
+  50% { transform: translateX(150%); }
+  100% { transform: translateX(150%); }
+}

@@ -1,9 +1,22 @@
 import React, { useState } from 'react';
-import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Clock, CheckCircle2, AlertTriangle, Plus } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Clock, CheckCircle2, Plus } from 'lucide-react';
+
+const priorityStyles = {
+  HIGH: 'bg-rose-500/20 text-rose-300 border-rose-500/30',
+  MEDIUM: 'bg-amber-500/20 text-amber-300 border-amber-500/30',
+  LOW: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30',
+};
+
+const priorityDotColor = {
+  HIGH: 'bg-rose-500',
+  MEDIUM: 'bg-amber-500',
+  LOW: 'bg-emerald-500',
+};
 
 export default function CalendarView({ tasks, onOpenNewTaskModal, onEditTask }) {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(new Date());
+  const [direction, setDirection] = useState(0); // -1 prev, 1 next, for transition key
 
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
@@ -12,10 +25,12 @@ export default function CalendarView({ tasks, onOpenNewTaskModal, onEditTask }) 
   const daysInMonth = new Date(year, month + 1, 0).getDate();
 
   const prevMonth = () => {
+    setDirection(-1);
     setCurrentDate(new Date(year, month - 1, 1));
   };
 
   const nextMonth = () => {
+    setDirection(1);
     setCurrentDate(new Date(year, month + 1, 1));
   };
 
@@ -24,7 +39,6 @@ export default function CalendarView({ tasks, onOpenNewTaskModal, onEditTask }) 
     "July", "August", "September", "October", "November", "December"
   ];
 
-  // Helper to check if two dates fall on the same day
   const isSameDay = (d1, d2) => {
     if (!d1 || !d2) return false;
     const date1 = new Date(d1);
@@ -34,10 +48,8 @@ export default function CalendarView({ tasks, onOpenNewTaskModal, onEditTask }) 
            date1.getDate() === date2.getDate();
   };
 
-  // Get tasks for the selected date
   const selectedDayTasks = tasks.filter(t => isSameDay(t.deadlineDate, selectedDate));
 
-  // Calendar cells generation
   const daysArray = [];
   for (let i = 0; i < firstDayOfMonth; i++) {
     daysArray.push(null);
@@ -46,9 +58,16 @@ export default function CalendarView({ tasks, onOpenNewTaskModal, onEditTask }) 
     daysArray.push(new Date(year, month, day));
   }
 
+  const handleCellKeyDown = (e, date) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      setSelectedDate(date);
+    }
+  };
+
   return (
     <div className="space-y-6">
-      
+
       {/* Calendar Header & Controls */}
       <div className="glass-panel p-6 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-4">
         <div className="flex items-center gap-3">
@@ -56,10 +75,10 @@ export default function CalendarView({ tasks, onOpenNewTaskModal, onEditTask }) 
             <CalendarIcon className="w-6 h-6" />
           </div>
           <div>
-            <h2 className="text-xl font-extrabold text-white">
+            <h2 className="text-xl font-extrabold text-white transition-all duration-200" key={`${month}-${year}`}>
               {monthNames[month]} {year}
             </h2>
-            <p className="text-xs text-slate-400">Interactive Task & Deadline Calendar</p>
+            <p className="text-xs text-slate-400">Interactive Task &amp; Deadline Calendar</p>
           </div>
         </div>
 
@@ -69,21 +88,23 @@ export default function CalendarView({ tasks, onOpenNewTaskModal, onEditTask }) 
               setCurrentDate(new Date());
               setSelectedDate(new Date());
             }}
-            className="px-3 py-1.5 rounded-xl bg-slate-800/80 hover:bg-slate-700/80 border border-slate-700 text-xs font-semibold text-slate-200 transition-all"
+            className="px-3 py-1.5 rounded-xl bg-slate-800/80 hover:bg-slate-700/80 border border-slate-700 text-xs font-semibold text-slate-200 transition-all duration-200"
           >
             Today
           </button>
-          
+
           <div className="flex items-center gap-1 bg-slate-900/60 p-1 rounded-xl border border-slate-800">
             <button
               onClick={prevMonth}
-              className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-all"
+              aria-label="Previous month"
+              className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-all duration-200"
             >
               <ChevronLeft className="w-4 h-4" />
             </button>
             <button
               onClick={nextMonth}
-              className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-all"
+              aria-label="Next month"
+              className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-all duration-200"
             >
               <ChevronRight className="w-4 h-4" />
             </button>
@@ -91,7 +112,7 @@ export default function CalendarView({ tasks, onOpenNewTaskModal, onEditTask }) 
 
           <button
             onClick={onOpenNewTaskModal}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-xs font-bold shadow-lg glow-blue transition-all"
+            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-xs font-bold shadow-lg glow-blue transition-all duration-200"
           >
             <Plus className="w-4 h-4" />
             Add Task
@@ -100,11 +121,10 @@ export default function CalendarView({ tasks, onOpenNewTaskModal, onEditTask }) 
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        
+
         {/* Calendar Grid */}
         <div className="lg:col-span-2 glass-panel p-6 rounded-2xl space-y-4">
-          
-          {/* Days of Week */}
+
           <div className="grid grid-cols-7 gap-1 text-center font-bold text-xs text-slate-400 uppercase tracking-wider pb-2 border-b border-slate-800">
             <span>Sun</span>
             <span>Mon</span>
@@ -115,8 +135,7 @@ export default function CalendarView({ tasks, onOpenNewTaskModal, onEditTask }) 
             <span>Sat</span>
           </div>
 
-          {/* Month Days Grid */}
-          <div className="grid grid-cols-7 gap-2">
+          <div key={`${month}-${year}`} className="grid grid-cols-7 gap-2 animate-[monthFade_0.2s_ease-out]">
             {daysArray.map((date, index) => {
               if (!date) {
                 return <div key={`empty-${index}`} className="h-20 sm:h-24 rounded-xl bg-slate-950/20" />;
@@ -129,8 +148,13 @@ export default function CalendarView({ tasks, onOpenNewTaskModal, onEditTask }) 
               return (
                 <div
                   key={date.toISOString()}
+                  role="button"
+                  tabIndex={0}
+                  aria-label={`${date.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })}${dayTasks.length ? `, ${dayTasks.length} task${dayTasks.length > 1 ? 's' : ''}` : ''}`}
+                  aria-pressed={isSelected}
                   onClick={() => setSelectedDate(date)}
-                  className={`h-20 sm:h-24 p-2 rounded-xl border flex flex-col justify-between cursor-pointer transition-all ${
+                  onKeyDown={(e) => handleCellKeyDown(e, date)}
+                  className={`h-20 sm:h-24 p-2 rounded-xl border flex flex-col justify-between cursor-pointer transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${
                     isSelected
                       ? 'bg-blue-600/20 border-blue-500 shadow-md ring-1 ring-blue-500/50'
                       : isToday
@@ -154,13 +178,12 @@ export default function CalendarView({ tasks, onOpenNewTaskModal, onEditTask }) 
                     {dayTasks.slice(0, 2).map((t) => (
                       <div
                         key={t.id}
-                        className={`text-[9px] font-semibold px-1.5 py-0.5 rounded truncate border ${
-                          t.priority === 'HIGH'
-                            ? 'bg-rose-500/20 text-rose-300 border-rose-500/30'
-                            : 'bg-blue-500/20 text-blue-300 border-blue-500/30'
-                        }`}
+                        className={`flex items-center gap-1 text-[9px] font-semibold px-1.5 py-0.5 rounded truncate border ${
+                          priorityStyles[t.priority] || priorityStyles.LOW
+                        } ${t.status === 'COMPLETE' ? 'opacity-50 line-through' : ''}`}
                       >
-                        {t.title}
+                        {t.status === 'COMPLETE' && <CheckCircle2 className="w-2.5 h-2.5 shrink-0" />}
+                        <span className="truncate">{t.title}</span>
                       </div>
                     ))}
                     {dayTasks.length > 2 && (
@@ -196,13 +219,19 @@ export default function CalendarView({ tasks, onOpenNewTaskModal, onEditTask }) 
                 <div
                   key={task.id}
                   onClick={() => onEditTask(task)}
-                  className="p-3 rounded-xl bg-slate-900/60 border border-slate-800 hover:border-blue-500/50 cursor-pointer transition-all space-y-1.5"
+                  className={`p-3 rounded-xl bg-slate-900/60 border border-slate-800 hover:border-blue-500/50 cursor-pointer transition-all duration-200 space-y-1.5 ${
+                    task.status === 'COMPLETE' ? 'opacity-60' : ''
+                  }`}
                 >
-                  <div className="flex items-center justify-between">
-                    <h5 className="font-bold text-xs text-slate-200 truncate">{task.title}</h5>
-                    <span className={`text-[9px] px-1.5 py-0.5 rounded font-extrabold uppercase ${
-                      task.priority === 'HIGH' ? 'bg-rose-500/20 text-rose-400' : 'bg-blue-500/20 text-blue-400'
-                    }`}>
+                  <div className="flex items-center justify-between gap-2">
+                    <h5 className={`font-bold text-xs text-slate-200 truncate ${task.status === 'COMPLETE' ? 'line-through' : ''}`}>
+                      {task.status === 'COMPLETE' && (
+                        <CheckCircle2 className="w-3 h-3 text-emerald-400 inline mr-1 -mt-0.5" />
+                      )}
+                      {task.title}
+                    </h5>
+                    <span className={`shrink-0 flex items-center gap-1 text-[9px] px-1.5 py-0.5 rounded font-extrabold uppercase ${priorityStyles[task.priority] || priorityStyles.LOW}`}>
+                      <span className={`w-1.5 h-1.5 rounded-full ${priorityDotColor[task.priority] || priorityDotColor.LOW}`} />
                       {task.priority}
                     </span>
                   </div>

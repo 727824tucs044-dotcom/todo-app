@@ -8,7 +8,7 @@ import RemindersView from './components/RemindersView';
 import ProfileView from './components/ProfileView';
 import AdminView from './components/AdminView';
 import { taskApi } from './services/api';
-import { Sparkles, Calendar, Bell, ShieldCheck, CheckCircle2 } from 'lucide-react';
+import { Sparkles, Calendar, Bell, CheckCircle2 } from 'lucide-react';
 
 export default function App() {
   const [user, setUser] = useState(() => {
@@ -100,8 +100,9 @@ export default function App() {
     }
   };
 
+  // Note: confirmation now happens via ConfirmModal inside DashboardView before this is called.
+  // No window.confirm() here anymore — avoids double-confirming the same delete.
   const handleDeleteTask = async (taskId) => {
-    if (!window.confirm('Are you sure you want to delete this task?')) return;
     try {
       await taskApi.deleteTask(taskId);
       fetchTasks();
@@ -131,7 +132,7 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col selection:bg-blue-500 selection:text-white">
-      
+
       {/* Top Navbar */}
       <Navbar
         activeTab={activeTab}
@@ -143,17 +144,24 @@ export default function App() {
         setSearchQuery={setSearchQuery}
       />
 
+      {/* Thin top loading bar while tasks are fetching */}
+      {loading && (
+        <div className="h-0.5 w-full bg-slate-800/60 overflow-hidden">
+          <div className="h-full w-1/3 bg-gradient-to-r from-blue-500 to-indigo-500 animate-[loadingBar_1s_ease-in-out_infinite]" />
+        </div>
+      )}
+
       {/* Main Content Viewport */}
       <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8">
         {!user ? (
           /* Landing Hero / Auth Prompt */
-          <div className="py-12 sm:py-20 text-center max-w-3xl mx-auto space-y-6">
+          <div className="py-12 sm:py-20 text-center max-w-3xl mx-auto space-y-6 animate-[fadeIn_0.3s_ease-out]">
             <div className="inline-flex p-4 rounded-3xl bg-blue-500/10 border border-blue-500/20 text-blue-400 glow-blue">
               <Sparkles className="w-10 h-10" />
             </div>
-            
+
             <h1 className="text-4xl sm:text-6xl font-extrabold tracking-tight bg-gradient-to-r from-white via-slate-200 to-blue-400 bg-clip-text text-transparent">
-              Advanced To-Do App with Calendar & Reminders
+              Advanced To-Do App with Calendar &amp; Reminders
             </h1>
 
             <p className="text-slate-400 text-sm sm:text-base leading-relaxed max-w-2xl mx-auto">
@@ -163,7 +171,7 @@ export default function App() {
             <div className="flex flex-wrap items-center justify-center gap-4 pt-4">
               <button
                 onClick={() => setIsAuthOpen(true)}
-                className="px-8 py-3.5 rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white font-extrabold text-sm shadow-xl glow-blue transition-all transform hover:-translate-y-0.5"
+                className="px-8 py-3.5 rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white font-extrabold text-sm shadow-xl glow-blue transition-all duration-200 transform hover:-translate-y-0.5"
               >
                 Get Started / Sign In
               </button>
@@ -171,19 +179,19 @@ export default function App() {
 
             {/* Feature Highlights Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-12 text-left">
-              <div className="glass-panel p-5 rounded-2xl border border-slate-800 space-y-2">
+              <div className="glass-panel glass-panel-hover p-5 rounded-2xl border border-slate-800 space-y-2">
                 <CheckCircle2 className="w-6 h-6 text-blue-400" />
                 <h3 className="font-bold text-slate-200 text-sm">Task Management</h3>
                 <p className="text-xs text-slate-400">Priorities, status tracking, recurring tasks, and live search.</p>
               </div>
 
-              <div className="glass-panel p-5 rounded-2xl border border-slate-800 space-y-2">
+              <div className="glass-panel glass-panel-hover p-5 rounded-2xl border border-slate-800 space-y-2">
                 <Calendar className="w-6 h-6 text-indigo-400" />
                 <h3 className="font-bold text-slate-200 text-sm">Interactive Calendar</h3>
                 <p className="text-xs text-slate-400">Visual monthly calendar grid mapped to your task deadline dates.</p>
               </div>
 
-              <div className="glass-panel p-5 rounded-2xl border border-slate-800 space-y-2">
+              <div className="glass-panel glass-panel-hover p-5 rounded-2xl border border-slate-800 space-y-2">
                 <Bell className="w-6 h-6 text-purple-400" />
                 <h3 className="font-bold text-slate-200 text-sm">Reminder System</h3>
                 <p className="text-xs text-slate-400">Automated in-app popups and browser alert notifications.</p>
@@ -192,7 +200,7 @@ export default function App() {
           </div>
         ) : (
           /* Logged In Workspace Views */
-          <div>
+          <div key={activeTab} className="animate-[fadeIn_0.2s_ease-out]">
             {activeTab === 'dashboard' && (
               <DashboardView
                 tasks={tasks}
@@ -250,7 +258,7 @@ export default function App() {
 
       {/* Footer */}
       <footer className="glass-panel border-t border-slate-800/80 py-4 px-6 text-center text-xs text-slate-500 mt-12">
-        <p>© 2026 Advanced To-Do App with Calendar & Reminders — Built according to SRS specifications</p>
+        <p>© 2026 Advanced To-Do App with Calendar &amp; Reminders — Built according to SRS specifications</p>
       </footer>
 
     </div>

@@ -1,24 +1,27 @@
 import React, { useState } from 'react';
-import { 
-  Plus, 
-  CheckCircle2, 
-  Clock, 
-  AlertTriangle, 
-  ListFilter, 
-  Calendar as CalendarIcon, 
-  Trash2, 
-  Edit3, 
-  Archive, 
+import {
+  Plus,
+  CheckCircle2,
+  Clock,
+  AlertTriangle,
+  ListFilter,
+  Calendar as CalendarIcon,
+  Trash2,
+  Edit3,
+  Archive,
   Sparkles,
   Repeat,
   BellRing
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
+import ConfirmModal from './ConfirmModal';
 
 export default function DashboardView({ tasks, onToggleComplete, onEditTask, onDeleteTask, onArchiveTask, onOpenNewTaskModal }) {
   const [filterStatus, setFilterStatus] = useState('ALL'); // ALL, INCOMPLETE, COMPLETE
   const [filterPriority, setFilterPriority] = useState('ALL'); // ALL, HIGH, MEDIUM, LOW
   const [sortBy, setSortBy] = useState('DEADLINE'); // DEADLINE, PRIORITY
+  const [taskToDelete, setTaskToDelete] = useState(null);
+  const [deleting, setDeleting] = useState(false);
 
   // Calculate Metrics
   const totalCount = tasks.length;
@@ -57,13 +60,23 @@ export default function DashboardView({ tasks, onToggleComplete, onEditTask, onD
     onToggleComplete(task.id);
   };
 
+  const handleConfirmDelete = async () => {
+    if (!taskToDelete) return;
+    setDeleting(true);
+    try {
+      await onDeleteTask(taskToDelete.id);
+      setTaskToDelete(null);
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
-      
+
       {/* Top Banner / Metrics Overview */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        
-        {/* Total Tasks Card */}
+
         <div className="glass-panel glass-panel-hover p-5 rounded-2xl flex items-center justify-between">
           <div>
             <p className="text-xs font-semibold text-slate-400">Total Tasks</p>
@@ -74,7 +87,6 @@ export default function DashboardView({ tasks, onToggleComplete, onEditTask, onD
           </div>
         </div>
 
-        {/* Pending Tasks */}
         <div className="glass-panel glass-panel-hover p-5 rounded-2xl flex items-center justify-between">
           <div>
             <p className="text-xs font-semibold text-amber-400">Pending Tasks</p>
@@ -85,7 +97,6 @@ export default function DashboardView({ tasks, onToggleComplete, onEditTask, onD
           </div>
         </div>
 
-        {/* Completed Tasks */}
         <div className="glass-panel glass-panel-hover p-5 rounded-2xl flex items-center justify-between">
           <div>
             <p className="text-xs font-semibold text-emerald-400">Completed</p>
@@ -96,7 +107,6 @@ export default function DashboardView({ tasks, onToggleComplete, onEditTask, onD
           </div>
         </div>
 
-        {/* High Priority Pending */}
         <div className="glass-panel glass-panel-hover p-5 rounded-2xl flex items-center justify-between">
           <div>
             <p className="text-xs font-semibold text-rose-400">High Priority</p>
@@ -111,14 +121,13 @@ export default function DashboardView({ tasks, onToggleComplete, onEditTask, onD
 
       {/* Control Bar: Filters, Sorting & Add Button */}
       <div className="glass-panel p-4 rounded-2xl flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
-        
-        {/* Status Tabs */}
+
         <div className="flex items-center gap-1 bg-slate-900/60 p-1 rounded-xl border border-slate-800">
           {['ALL', 'INCOMPLETE', 'COMPLETE'].map(status => (
             <button
               key={status}
               onClick={() => setFilterStatus(status)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all duration-200 ${
                 filterStatus === status
                   ? 'bg-blue-600 text-white shadow'
                   : 'text-slate-400 hover:text-slate-200'
@@ -129,13 +138,12 @@ export default function DashboardView({ tasks, onToggleComplete, onEditTask, onD
           ))}
         </div>
 
-        {/* Priority & Sort Filters */}
         <div className="flex flex-wrap items-center gap-3">
-          
+
           <select
             value={filterPriority}
             onChange={(e) => setFilterPriority(e.target.value)}
-            className="bg-slate-900/60 border border-slate-800 rounded-xl px-3 py-1.5 text-xs text-slate-300 font-medium focus:outline-none focus:border-blue-500"
+            className="bg-slate-900/60 border border-slate-800 rounded-xl px-3 py-1.5 text-xs text-slate-300 font-medium focus:outline-none focus:border-blue-500 transition-all duration-200"
           >
             <option value="ALL">All Priorities</option>
             <option value="HIGH">High Priority</option>
@@ -146,7 +154,7 @@ export default function DashboardView({ tasks, onToggleComplete, onEditTask, onD
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value)}
-            className="bg-slate-900/60 border border-slate-800 rounded-xl px-3 py-1.5 text-xs text-slate-300 font-medium focus:outline-none focus:border-blue-500"
+            className="bg-slate-900/60 border border-slate-800 rounded-xl px-3 py-1.5 text-xs text-slate-300 font-medium focus:outline-none focus:border-blue-500 transition-all duration-200"
           >
             <option value="DEADLINE">Sort by Deadline</option>
             <option value="PRIORITY">Sort by Priority</option>
@@ -154,7 +162,7 @@ export default function DashboardView({ tasks, onToggleComplete, onEditTask, onD
 
           <button
             onClick={onOpenNewTaskModal}
-            className="flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-xs font-bold shadow-lg glow-blue transition-all"
+            className="flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-xs font-bold shadow-lg glow-blue transition-all duration-200"
           >
             <Plus className="w-4 h-4" />
             New Task
@@ -179,16 +187,15 @@ export default function DashboardView({ tasks, onToggleComplete, onEditTask, onD
           {filtered.map((task) => (
             <div
               key={task.id}
-              className={`glass-panel p-4 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 transition-all ${
+              className={`glass-panel p-4 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 transition-all duration-200 ${
                 task.status === 'COMPLETE' ? 'opacity-60 bg-slate-900/40' : 'hover:border-blue-500/40'
               }`}
             >
-              
-              {/* Checkbox & Task Title / Specs */}
+
               <div className="flex items-start gap-3 flex-1 min-w-0">
                 <button
                   onClick={() => handleToggle(task)}
-                  className={`mt-0.5 w-5 h-5 rounded-lg border flex items-center justify-center transition-all ${
+                  className={`mt-0.5 w-5 h-5 rounded-lg border flex items-center justify-center transition-all duration-200 ${
                     task.status === 'COMPLETE'
                       ? 'bg-emerald-500 border-emerald-500 text-slate-950'
                       : 'border-slate-600 hover:border-blue-500 bg-slate-900/60'
@@ -203,7 +210,6 @@ export default function DashboardView({ tasks, onToggleComplete, onEditTask, onD
                       {task.title}
                     </h4>
 
-                    {/* Priority Badge */}
                     <span className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase border ${
                       task.priority === 'HIGH'
                         ? 'bg-rose-500/10 text-rose-400 border-rose-500/30'
@@ -214,7 +220,6 @@ export default function DashboardView({ tasks, onToggleComplete, onEditTask, onD
                       {task.priority}
                     </span>
 
-                    {/* Recurring Badge */}
                     {task.recurring && task.recurring !== 'NONE' && (
                       <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-indigo-500/10 text-indigo-400 border border-indigo-500/30">
                         <Repeat className="w-3 h-3" />
@@ -227,7 +232,6 @@ export default function DashboardView({ tasks, onToggleComplete, onEditTask, onD
                     <p className="text-xs text-slate-400 line-clamp-2">{task.description}</p>
                   )}
 
-                  {/* Deadline & Reminder Metadata */}
                   <div className="flex items-center gap-4 text-[11px] text-slate-400 pt-1">
                     {task.deadlineDate && (
                       <div className="flex items-center gap-1">
@@ -246,12 +250,11 @@ export default function DashboardView({ tasks, onToggleComplete, onEditTask, onD
                 </div>
               </div>
 
-              {/* Action Buttons */}
               <div className="flex items-center gap-1 self-end sm:self-center">
                 <button
                   onClick={() => onEditTask(task)}
                   title="Edit Task"
-                  className="p-2 rounded-xl text-slate-400 hover:text-blue-400 hover:bg-slate-800/80 transition-all"
+                  className="p-2 rounded-xl text-slate-400 hover:text-blue-400 hover:bg-slate-800/80 transition-all duration-200"
                 >
                   <Edit3 className="w-4 h-4" />
                 </button>
@@ -259,15 +262,15 @@ export default function DashboardView({ tasks, onToggleComplete, onEditTask, onD
                 <button
                   onClick={() => onArchiveTask(task.id)}
                   title="Archive Task"
-                  className="p-2 rounded-xl text-slate-400 hover:text-amber-400 hover:bg-slate-800/80 transition-all"
+                  className="p-2 rounded-xl text-slate-400 hover:text-amber-400 hover:bg-slate-800/80 transition-all duration-200"
                 >
                   <Archive className="w-4 h-4" />
                 </button>
 
                 <button
-                  onClick={() => onDeleteTask(task.id)}
+                  onClick={() => setTaskToDelete(task)}
                   title="Delete Task"
-                  className="p-2 rounded-xl text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 transition-all"
+                  className="p-2 rounded-xl text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 transition-all duration-200"
                 >
                   <Trash2 className="w-4 h-4" />
                 </button>
@@ -277,6 +280,17 @@ export default function DashboardView({ tasks, onToggleComplete, onEditTask, onD
           ))}
         </div>
       )}
+
+      <ConfirmModal
+        isOpen={!!taskToDelete}
+        title="Delete this task?"
+        message={taskToDelete ? `Are you sure you want to delete "${taskToDelete.title}"? This action cannot be undone.` : ''}
+        confirmLabel="Delete Task"
+        danger
+        loading={deleting}
+        onConfirm={handleConfirmDelete}
+        onCancel={() => !deleting && setTaskToDelete(null)}
+      />
 
     </div>
   );

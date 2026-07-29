@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { User, Mail, Lock, Key, Download, CheckCircle2, ShieldCheck } from 'lucide-react';
+import { User, Key, Download, ListChecks, CheckCircle2, Clock, AlertTriangle, Eye, EyeOff } from 'lucide-react';
 import { userApi } from '../services/api';
 
 export default function ProfileView({ user, tasks, onUserUpdated }) {
@@ -7,12 +7,22 @@ export default function ProfileView({ user, tasks, onUserUpdated }) {
   const [email, setEmail] = useState(user?.email || '');
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
   const [msg, setMsg] = useState({ text: '', isError: false });
-  const [loading, setLoading] = useState(false);
+  const [profileLoading, setProfileLoading] = useState(false);
+  const [passwordLoading, setPasswordLoading] = useState(false);
+
+  // Stats derived from tasks already passed into this component
+  const totalCount = tasks.length;
+  const completedCount = tasks.filter(t => t.status === 'COMPLETE').length;
+  const pendingCount = tasks.filter(t => t.status === 'INCOMPLETE').length;
+  const highPriorityCount = tasks.filter(t => t.priority === 'HIGH' && t.status === 'INCOMPLETE').length;
+  const completionRate = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
 
   const handleUpdateProfile = async (e) => {
     e.preventDefault();
-    setLoading(true);
+    setProfileLoading(true);
     setMsg({ text: '', isError: false });
 
     try {
@@ -22,13 +32,13 @@ export default function ProfileView({ user, tasks, onUserUpdated }) {
     } catch (err) {
       setMsg({ text: err.response?.data?.message || 'Failed to update profile.', isError: true });
     } finally {
-      setLoading(false);
+      setProfileLoading(false);
     }
   };
 
   const handleChangePassword = async (e) => {
     e.preventDefault();
-    setLoading(true);
+    setPasswordLoading(true);
     setMsg({ text: '', isError: false });
 
     try {
@@ -39,7 +49,7 @@ export default function ProfileView({ user, tasks, onUserUpdated }) {
     } catch (err) {
       setMsg({ text: err.response?.data?.message || 'Failed to change password.', isError: true });
     } finally {
-      setLoading(false);
+      setPasswordLoading(false);
     }
   };
 
@@ -77,14 +87,14 @@ export default function ProfileView({ user, tasks, onUserUpdated }) {
 
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
-      
+
       {/* Profile Header */}
-      <div className="glass-panel p-6 rounded-2xl flex items-center gap-4">
-        <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-purple-600 flex items-center justify-center text-2xl font-extrabold text-white shadow-xl glow-blue">
+      <div className="glass-panel p-6 rounded-2xl flex flex-col sm:flex-row items-center sm:items-start gap-4 text-center sm:text-left">
+        <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-purple-600 flex items-center justify-center text-2xl font-extrabold text-white shadow-xl glow-blue shrink-0">
           {user?.name ? user.name.charAt(0).toUpperCase() : 'U'}
         </div>
-        <div>
-          <h2 className="text-2xl font-extrabold text-white flex items-center gap-2">
+        <div className="flex-1">
+          <h2 className="text-2xl font-extrabold text-white flex items-center justify-center sm:justify-start gap-2 flex-wrap">
             {user?.name}
             <span className="text-xs px-2.5 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 font-bold border border-indigo-500/30">
               {user?.role}
@@ -94,8 +104,51 @@ export default function ProfileView({ user, tasks, onUserUpdated }) {
         </div>
       </div>
 
+      {/* Task Stats Summary */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="glass-panel glass-panel-hover p-4 rounded-2xl flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-400 flex items-center justify-center shrink-0">
+            <ListChecks className="w-5 h-5" />
+          </div>
+          <div>
+            <p className="text-[11px] font-semibold text-slate-400">Total Tasks</p>
+            <h3 className="text-lg font-extrabold text-white">{totalCount}</h3>
+          </div>
+        </div>
+
+        <div className="glass-panel glass-panel-hover p-4 rounded-2xl flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0">
+            <CheckCircle2 className="w-5 h-5" />
+          </div>
+          <div>
+            <p className="text-[11px] font-semibold text-slate-400">Completed</p>
+            <h3 className="text-lg font-extrabold text-white">{completionRate}%</h3>
+          </div>
+        </div>
+
+        <div className="glass-panel glass-panel-hover p-4 rounded-2xl flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center shrink-0">
+            <Clock className="w-5 h-5" />
+          </div>
+          <div>
+            <p className="text-[11px] font-semibold text-slate-400">Pending</p>
+            <h3 className="text-lg font-extrabold text-white">{pendingCount}</h3>
+          </div>
+        </div>
+
+        <div className="glass-panel glass-panel-hover p-4 rounded-2xl flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 flex items-center justify-center shrink-0">
+            <AlertTriangle className="w-5 h-5" />
+          </div>
+          <div>
+            <p className="text-[11px] font-semibold text-slate-400">High Priority</p>
+            <h3 className="text-lg font-extrabold text-white">{highPriorityCount}</h3>
+          </div>
+        </div>
+      </div>
+
       {msg.text && (
-        <div className={`p-4 rounded-xl border text-xs font-bold text-center ${
+        <div className={`p-4 rounded-xl border text-xs font-bold text-center transition-all duration-200 animate-[fadeIn_0.2s_ease-out] ${
           msg.isError ? 'bg-rose-500/10 border-rose-500/30 text-rose-400' : 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
         }`}>
           {msg.text}
@@ -103,7 +156,7 @@ export default function ProfileView({ user, tasks, onUserUpdated }) {
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        
+
         {/* Profile Settings */}
         <div className="glass-panel p-6 rounded-2xl space-y-4">
           <h3 className="text-sm font-bold text-slate-200 flex items-center gap-2">
@@ -117,7 +170,7 @@ export default function ProfileView({ user, tasks, onUserUpdated }) {
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="w-full bg-slate-900/60 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-200 focus:border-blue-500"
+                className="w-full bg-slate-900/60 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-blue-500 transition-all duration-200"
               />
             </div>
             <div>
@@ -126,16 +179,17 @@ export default function ProfileView({ user, tasks, onUserUpdated }) {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full bg-slate-900/60 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-200 focus:border-blue-500"
+                className="w-full bg-slate-900/60 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-blue-500 transition-all duration-200"
               />
             </div>
 
             <button
               type="submit"
-              disabled={loading}
-              className="w-full py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs shadow transition-all"
+              disabled={profileLoading}
+              className="w-full py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs shadow transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
-              Save Profile Changes
+              {profileLoading && <span className="w-3.5 h-3.5 border-2 border-white/40 border-t-white rounded-full animate-spin" />}
+              {profileLoading ? 'Saving...' : 'Save Profile Changes'}
             </button>
           </form>
         </div>
@@ -143,37 +197,58 @@ export default function ProfileView({ user, tasks, onUserUpdated }) {
         {/* Change Password */}
         <div className="glass-panel p-6 rounded-2xl space-y-4">
           <h3 className="text-sm font-bold text-slate-200 flex items-center gap-2">
-            <Key className="w-4 h-4 text-purple-400" /> Security & Password
+            <Key className="w-4 h-4 text-purple-400" /> Security &amp; Password
           </h3>
 
           <form onSubmit={handleChangePassword} className="space-y-3">
             <div>
               <label className="block text-xs font-semibold text-slate-400 mb-1">Current Password</label>
-              <input
-                type="password"
-                required
-                value={currentPassword}
-                onChange={(e) => setCurrentPassword(e.target.value)}
-                className="w-full bg-slate-900/60 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-200 focus:border-purple-500"
-              />
+              <div className="relative">
+                <input
+                  type={showCurrentPassword ? 'text' : 'password'}
+                  required
+                  value={currentPassword}
+                  onChange={(e) => setCurrentPassword(e.target.value)}
+                  className="w-full bg-slate-900/60 border border-slate-800 rounded-xl px-3 py-2 pr-9 text-xs text-slate-200 focus:outline-none focus:border-purple-500 transition-all duration-200"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowCurrentPassword((v) => !v)}
+                  aria-label={showCurrentPassword ? 'Hide password' : 'Show password'}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200 transition-colors duration-200"
+                >
+                  {showCurrentPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                </button>
+              </div>
             </div>
             <div>
               <label className="block text-xs font-semibold text-slate-400 mb-1">New Password</label>
-              <input
-                type="password"
-                required
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                className="w-full bg-slate-900/60 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-200 focus:border-purple-500"
-              />
+              <div className="relative">
+                <input
+                  type={showNewPassword ? 'text' : 'password'}
+                  required
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  className="w-full bg-slate-900/60 border border-slate-800 rounded-xl px-3 py-2 pr-9 text-xs text-slate-200 focus:outline-none focus:border-purple-500 transition-all duration-200"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowNewPassword((v) => !v)}
+                  aria-label={showNewPassword ? 'Hide password' : 'Show password'}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200 transition-colors duration-200"
+                >
+                  {showNewPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                </button>
+              </div>
             </div>
 
             <button
               type="submit"
-              disabled={loading}
-              className="w-full py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs shadow transition-all"
+              disabled={passwordLoading}
+              className="w-full py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs shadow transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
-              Update Password
+              {passwordLoading && <span className="w-3.5 h-3.5 border-2 border-white/40 border-t-white rounded-full animate-spin" />}
+              {passwordLoading ? 'Updating...' : 'Update Password'}
             </button>
           </form>
         </div>
@@ -192,14 +267,14 @@ export default function ProfileView({ user, tasks, onUserUpdated }) {
         <div className="flex flex-wrap items-center gap-3 pt-2">
           <button
             onClick={handleExportJSON}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-600/20 border border-emerald-500/30 text-emerald-300 text-xs font-bold hover:bg-emerald-600/30 transition-all"
+            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-600/20 border border-emerald-500/30 text-emerald-300 text-xs font-bold hover:bg-emerald-600/30 transition-all duration-200"
           >
             <Download className="w-4 h-4" /> Download JSON Backup
           </button>
 
           <button
             onClick={handleExportCSV}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-600/20 border border-blue-500/30 text-blue-300 text-xs font-bold hover:bg-blue-600/30 transition-all"
+            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-600/20 border border-blue-500/30 text-blue-300 text-xs font-bold hover:bg-blue-600/30 transition-all duration-200"
           >
             <Download className="w-4 h-4" /> Download CSV Spreadsheet
           </button>
